@@ -1,3 +1,5 @@
+import com.sun.istack.internal.NotNull;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -7,24 +9,15 @@ import java.util.regex.Pattern;
 
 public class Main
 {
-
     /**
      * The problem we are solving.
      */
-    public Sudoku sud;
+    public Sudoku sudoku;
 
     /**
      * The initial assignment state.
      */
     public Assignment initial = Assignment.blank();
-
-    /**
-     * Setup a blank assignment, size 16 sudoku board.
-     */
-    public Main()
-    {
-        sud = new Sudoku(16);
-    }
 
     /**
      * Setup from an input file.
@@ -33,30 +26,30 @@ public class Main
     {
         try
         {
-            BufferedReader in        = new BufferedReader(new FileReader(filename));
-            int            boardSize = new Integer(in.readLine());
-            sud = new Sudoku(boardSize);
+            BufferedReader in = new BufferedReader(new FileReader(filename));
+            int boardSize = new Integer(in.readLine());
+            sudoku = new Sudoku(boardSize);
 
-            List<Variable> vars      = sud.variables();
-            int            numInputs = new Integer(in.readLine());
+            List<Variable> vars = sudoku.variables();
+            int numInputs = new Integer(in.readLine());
 
             Pattern p = Pattern.compile("^(\\d+)\\s+(\\d+)\\s+(\\d+)$");
 
             // Assign all the values
             for(int i = 0; i < numInputs; i++)
             {
-                String  input = in.readLine();
-                Matcher m     = p.matcher(input);
+                String input = in.readLine();
+                Matcher m = p.matcher(input);
                 if(m.matches())
                 {
-                    int     row = new Integer(m.group(1)) - 1;
-                    int     col = new Integer(m.group(2)) - 1;
+                    int row = new Integer(m.group(1));
+                    int col = new Integer(m.group(2));
                     Integer val = new Integer(m.group(3));
 
                     // Assign the variable and trigger any inference that is required.
                     Variable var = vars.get(row * boardSize + col);
                     initial = initial.assign(var, val);
-                    initial = sud.inference(initial, var);
+                    initial = sudoku.inference(initial, var);
 
                 }
                 else
@@ -73,42 +66,89 @@ public class Main
         {
             System.out.println("Failed to load input file. Using defaults.");
             initial = Assignment.blank();
-            sud = new Sudoku(16);
+            sudoku = new Sudoku(9);
         }
     }
 
     public static void main(String[] args)
     {
-        Main m;
-        if(args.length > 0)
-        {
-            m = new Main(args[0]);
-        }
-        else
-        {
-            m = new Main();
-        }
+        Main m = new Main(System.getProperty("user.dir") + "/resources/sodoku1.txt");
 
-        Assignment solu = m.solve();
+        System.out.println("Initial:");
+        m.represent(m.sudoku.variables(), m.initial);
 
-        if(solu == null)
+        Assignment solution = m.solve();
+
+        if(solution == null)
         {
             System.out.println("Failed to find a solution!");
             System.exit(1);
         }
-
         System.out.println("Solution:");
-        List<Variable> vars = m.sud.variables();
-        for(Variable v : vars)
-        {
-            System.out.println(v.description() + " " + solu.getValue(v));
-        }
+        m.represent(m.sudoku.variables(), solution);
 
     }
 
     public Assignment solve()
     {
-        Backtrack solve = new MRVBacktrack(sud, initial);
+        Backtrack solve = new Backtrack(sudoku, initial);
         return solve.solve();
+    }
+
+    public void represent(@NotNull List<Variable> vars, @NotNull Assignment assignment)
+    {
+        int s4 = (int) Math.round(Math.pow(vars.size(), 1f / 4f));
+        int idx = -1;
+        for(int i = -1, is = s4, js = s4, ks = s4, ls = s4; ++i < is; )
+        {
+            for(int j = -1; ++j < js; )
+            {
+                for(int k = -1; ++k < ks; )
+                {
+                    System.out.printf("%c", ' ');
+
+                    for(int l = -1; ++l < ls; )
+                    {
+                        int val = -1;
+                        try
+                        {
+                            val = ((Integer) assignment.getValue(vars.get(++idx)));
+                        }
+                        catch(NullPointerException ignored)
+                        {
+                        }
+                        if(val == -1)
+                        {
+                            System.out.printf("%2s ", "..");
+                        }
+                        else
+                        {
+                            System.out.printf("%2d ", val);
+                        }
+                    }
+                    if((k + 1) != ks)
+                    {
+                        System.out.printf("%c", '│');
+                    }
+                }
+                System.out.println();
+            }
+            if((i + 1) != is)
+            {
+                for(int k = -1; ++k < ks; )
+                {
+                    System.out.printf("%c", '─');
+                    for(int l = -1; ++l < ls; )
+                    {
+                        System.out.printf("%s", "───");
+                    }
+                    if((k + 1) != ks)
+                    {
+                        System.out.printf("%c", '┼');
+                    }
+                }
+                System.out.println();
+            }
+        }
     }
 }
