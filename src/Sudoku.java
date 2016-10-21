@@ -202,9 +202,9 @@ public class Sudoku extends CSPProblem
 
         public boolean consistent(Assignment asign)
         {
-            boolean[] seen             = new boolean[boardSize + 1];
-            boolean[] avail            = new boolean[boardSize + 1];
-            int       constraintDomain = 0;
+            boolean[] seen = new boolean[boardSize + 1];
+            boolean[] avail = new boolean[boardSize + 1];
+            int constraintDomain = 0;
 
             for(Variable v : variables)
             {

@@ -26,8 +26,8 @@ public class Assignment
     static Assignment blank()
     {
         Assignment blank = new Assignment();
-        blank.assignments = new HashMap<Variable, Object>();
-        blank.domain = new HashMap<Variable, List<Object>>();
+        blank.assignments = new HashMap<>();
+        blank.domain = new HashMap<>();
         return blank;
     }
 
@@ -38,9 +38,9 @@ public class Assignment
     public Assignment assign(Variable v, Object val)
     {
         Assignment n = new Assignment();
-        n.assignments = new HashMap<Variable, Object>(assignments);
+        n.assignments = new HashMap<>(assignments);
         n.assignments.put(v, val);
-        n.domain = new HashMap<Variable, List<Object>>(domain);
+        n.domain = new HashMap<>(domain);
 
         // Restrict the domain to only a single value
         List<Object> varDomain = new LinkedList<Object>();
